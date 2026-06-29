@@ -1,0 +1,26 @@
+# SecureLens backend — pinned dependencies
+# Versions are pinned for reproducibility. They reflect recent stable
+# releases; if `pip install` fails on a pin, bump it and note the change.
+# Tested on Python 3.12 (3.14 lacks wheels for the native deps below).
+
+# --- Phase 1: API, DB, scanners ---
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+sqlalchemy==2.0.36
+pydantic==2.10.4
+pydantic-settings==2.7.0
+python-dotenv==1.0.1
+alembic==1.14.0
+requests==2.32.3
+PyJWT==2.10.1
+
+# --- Dev/test ---
+pytest==8.3.4
+httpx==0.28.1
+
+# --- Phase 2: RAG layer ---
+# chromadb 1.x ships prebuilt wheels (no chroma-hnswlib compile needed), so it
+# installs on Windows/py3.12 without MSVC build tools.
+langchain==0.3.13
+langchain-groq==0.2.2
+chromadb==1.5.9

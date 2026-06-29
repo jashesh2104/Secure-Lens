@@ -1,0 +1,39 @@
+# Deployment-only (EC2 with root). Not for local dev — local runs native
+# processes. Postgres replaces SQLite here via DATABASE_URL.
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_USER: securelens
+      POSTGRES_PASSWORD: securelens
+      POSTGRES_DB: securelens
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U securelens"]
+      interval: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://securelens:securelens@db:5432/securelens
+      GROQ_API_KEY: ${GROQ_API_KEY}
+      SONARQUBE_HOST: ${SONARQUBE_HOST}
+      SONARQUBE_TOKEN: ${SONARQUBE_TOKEN}
+      JWT_SECRET: ${JWT_SECRET}
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "8000:8000"
+
+  frontend:
+    build: ./frontend
+    depends_on:
+      - backend
+    ports:
+      - "80:80"
+
+volumes:
+  pgdata:

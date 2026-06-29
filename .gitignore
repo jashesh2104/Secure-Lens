@@ -1,0 +1,33 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+*.egg-info/
+
+# Env / secrets
+.env
+
+# Database
+*.db
+*.sqlite3
+
+# ChromaDB persistence
+chroma/
+backend/chroma/
+
+# Scanner artifacts
+.scannerwork/
+gitleaks-report.json
+
+# Node / frontend
+node_modules/
+dist/
+
+# Test fixtures (intentionally vulnerable)
+sample_vuln/
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
