@@ -32,7 +32,27 @@ _SONAR_SEVERITY_MAP: dict[str, Severity] = {
 _GITLEAKS_SEVERITY = Severity.HIGH
 
 
-def _normalize_sonar(issue: dict) -> FindingCreate:
+def normalize_path(raw_path: str, repo_root: str) -> str:
+    """Return a repo-relative file path.
+
+    Gitleaks' `dir` mode reports paths like `../sample_vuln/app.py` (and can be
+    absolute), while SonarQube reports repo-relative paths. This strips an exact
+    `repo_root` prefix and any leading `./`/`../` segments so both tools produce
+    the same `src/app.py`-style path. Backslashes are normalized to `/`.
+    """
+    if not raw_path:
+        return raw_path
+    p = raw_path.replace("\\", "/")
+    root = (repo_root or "").replace("\\", "/").rstrip("/")
+    if root and p.startswith(root + "/"):
+        p = p[len(root) + 1:]
+    parts = p.split("/")
+    while parts and parts[0] in ("", ".", ".."):
+        parts.pop(0)
+    return "/".join(parts)
+
+
+def _normalize_sonar(issue: dict, repo_root: str = "") -> FindingCreate:
     raw_sev = issue.get("severity", "MAJOR")
     # SonarQube component looks like "projectKey:src/app.py"; keep the path part.
     component = issue.get("component", "")
@@ -42,26 +62,31 @@ def _normalize_sonar(issue: dict) -> FindingCreate:
         severity=raw_sev,
         normalized_severity=_SONAR_SEVERITY_MAP.get(raw_sev, Severity.MEDIUM),
         rule_id=issue.get("rule", "unknown"),
-        file_path=file_path,
+        file_path=normalize_path(file_path, repo_root),
         line_number=issue.get("line"),
         message=issue.get("message", ""),
     )
 
 
-def _normalize_gitleaks(finding: dict) -> FindingCreate:
+def _normalize_gitleaks(finding: dict, repo_root: str = "") -> FindingCreate:
     return FindingCreate(
         source_tool=SourceTool.GITLEAKS,
         severity="secret",
         normalized_severity=_GITLEAKS_SEVERITY,
         rule_id=finding.get("RuleID", "unknown"),
-        file_path=finding.get("File", ""),
+        file_path=normalize_path(finding.get("File", ""), repo_root),
         line_number=finding.get("StartLine"),
         message=finding.get("Description", "Hardcoded secret detected"),
     )
 
 
-def normalize(sonar_issues: list[dict], gitleaks_findings: list[dict]) -> list[FindingCreate]:
-    """Map raw tool output into a single list of unified findings."""
-    return [_normalize_sonar(i) for i in sonar_issues] + [
-        _normalize_gitleaks(f) for f in gitleaks_findings
+def normalize(sonar_issues: list[dict], gitleaks_findings: list[dict],
+              repo_root: str = "") -> list[FindingCreate]:
+    """Map raw tool output into a single list of unified findings.
+
+    `repo_root` is the scanned path; file paths are normalized relative to it so
+    both tools report consistent, repo-relative locations.
+    """
+    return [_normalize_sonar(i, repo_root) for i in sonar_issues] + [
+        _normalize_gitleaks(f, repo_root) for f in gitleaks_findings
     ]

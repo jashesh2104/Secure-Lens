@@ -17,12 +17,14 @@ settings = get_settings()
 # SQLite + multithreaded servers (uvicorn) need this flag; for Postgres it's
 # omitted because the default driver is already thread-safe.
 _connect_args = (
-    {"check_same_thread": False}
+    {"check_same_thread": False, "timeout": 30}
     if settings.database_url.startswith("sqlite")
     else {}
 )
 
-engine = create_engine(settings.database_url, connect_args=_connect_args)
+engine = create_engine(
+    settings.database_url, connect_args=_connect_args, pool_pre_ping=True
+)
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 

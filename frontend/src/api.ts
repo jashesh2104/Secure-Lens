@@ -1,6 +1,8 @@
-// Typed API client. In dev, Vite proxies "/api" -> backend; in prod the SPA is
-// served by the same nginx that reverse-proxies "/api" to FastAPI.
-const BASE = "/api";
+// Typed API client. The API base URL is read from VITE_API_BASE_URL at build
+// time (see frontend/.env.example). When unset it falls back to "/api", which
+// in dev Vite proxies to the backend and in prod nginx reverse-proxies to
+// FastAPI.
+const BASE = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export type Severity = "critical" | "high" | "medium" | "low";
 
@@ -49,6 +51,7 @@ export const api = {
   createScan: (name: string, url_or_path: string) =>
     req<Scan>("/scan", { method: "POST", body: JSON.stringify({ name, url_or_path }) }),
   getScan: (id: number) => req<Scan>(`/scan/${id}`),
+  triageScan: (id: number) => req<Scan>(`/scan/${id}/triage`, { method: "POST" }),
   listFindings: (scanId?: number) =>
     req<Finding[]>(`/findings${scanId ? `?scan_id=${scanId}` : ""}`),
   triage: (id: number) => req<Finding>(`/findings/${id}/triage`, { method: "POST" }),

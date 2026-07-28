@@ -1,0 +1,23 @@
+# Gitleaks configuration for SecureLens scans.
+#
+# NOTE: gitleaks 8.x has no `--exclude-paths` or `--no-git` CLI flag (verified
+# with `gitleaks dir --help`). Path exclusion is done here via `[allowlist]
+# paths` regexes. gitleaks auto-loads a `(target)/.gitleaks.toml`, and the
+# runner also passes this file explicitly with `-c/--config`.
+title = "SecureLens gitleaks config"
+
+[extend]
+# Keep gitleaks' built-in secret-detection rules; we only add path exclusions.
+useDefault = true
+
+[allowlist]
+description = "Skip heavy vendored/build directories so scans don't time out"
+paths = [
+    '''(^|/)\.venv(/|$)''',
+    '''(^|/)node_modules(/|$)''',
+    '''(^|/)chroma(/|$)''',
+    '''(^|/)\.git(/|$)''',
+    '''(^|/)__pycache__(/|$)''',
+    '''\.pyc$''',
+    '''(^|/)alembic/versions(/|$)''',
+]

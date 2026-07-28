@@ -3,6 +3,7 @@
 from app.models.repo import Repo
 from app.models.scan import Scan, ScanStatus
 from app.models.finding import Finding, SourceTool, Severity, FindingStatus
+from app.models.user import User
 
 __all__ = [
     "Repo",
@@ -12,4 +13,5 @@ __all__ = [
     "SourceTool",
     "Severity",
     "FindingStatus",
+    "User",
 ]
