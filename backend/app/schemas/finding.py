@@ -29,5 +29,8 @@ class FindingRead(FindingBase):
     scan_id: int
     status: FindingStatus
     triage_result: dict | None = None
+    reachability: dict | None = None
+    priority: dict | None = None
+    verified_fix: dict | None = None
 
     model_config = ConfigDict(from_attributes=True)

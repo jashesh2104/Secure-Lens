@@ -25,7 +25,7 @@ def main() -> int:
     leaks: list[dict] = []
     try:
         sonarqube_runner.run_scanner(repo_path, project_key)
-        sonarqube_runner.wait_for_ce_task(project_key)  # wait for async CE
+        sonarqube_runner.wait_for_ce_task(repo_path, project_key)  # wait for async CE
         sonar = sonarqube_runner.fetch_issues(project_key)
     except Exception as exc:  # noqa: BLE001
         print(f"sonar skipped: {exc}")

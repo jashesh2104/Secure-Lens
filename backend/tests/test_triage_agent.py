@@ -38,14 +38,14 @@ def test_triage_finding_returns_valid_triage_result(monkeypatch):
     )
 
     # No real API key, network, or Chroma store.
-    monkeypatch.setattr(triage_agent.settings, "groq_api_key", "test-key")
+    monkeypatch.setattr(triage_agent, "llm_available", lambda: True)
     monkeypatch.setattr(triage_agent, "retrieve", lambda *a, **k: ["kb context"])
 
-    # Mock the Groq client so structured output yields our TriageResult.
+    # Mock the chat model so structured output yields our TriageResult.
     fake_llm = MagicMock()
     fake_llm.with_structured_output.return_value = RunnableLambda(lambda _: expected)
 
-    with patch.object(triage_agent, "ChatGroq", return_value=fake_llm):
+    with patch.object(triage_agent, "get_chat_model", return_value=fake_llm):
         result = triage_agent.triage_finding(_finding())
 
     # Matches the Pydantic schema.

@@ -12,6 +12,16 @@ import logging
 import uuid
 from contextlib import asynccontextmanager
 
+# Trust the OS certificate store (e.g. a corporate root CA) for all outbound
+# HTTPS so LLM calls succeed behind TLS-inspecting proxies. Must run before any
+# HTTPS client is created. Best-effort: skip cleanly if truststore is absent.
+try:
+    import truststore
+
+    truststore.inject_into_ssl()
+except Exception:  # noqa: BLE001
+    pass
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse

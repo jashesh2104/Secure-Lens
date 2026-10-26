@@ -48,7 +48,7 @@ jobs:
           key = os.environ.get("GITHUB_REPOSITORY", "local").replace("/", "_")
           try:
               sonarqube_runner.run_scanner("..", key)
-              sonarqube_runner.wait_for_ce_task(key)  # wait for async CE
+              sonarqube_runner.wait_for_ce_task("..", key)  # wait for async CE
               issues = sonarqube_runner.fetch_issues(key)
           except Exception as exc:
               print(f"sonar skipped: {exc}")

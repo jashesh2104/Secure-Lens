@@ -27,7 +27,30 @@ class Settings(BaseSettings):
     # SQLite locally; swap to a postgresql:// URL on EC2 without code changes.
     database_url: str = "sqlite:///./securelens.db"
 
-    # --- LLM (Groq) ---------------------------------------------------------
+    # --- LLM provider -------------------------------------------------------
+    # Which chat model backs triage + fix generation. GitHub Models (the former
+    # GitHub-hosted inference API) was retired 2026-07-30 and a backend cannot
+    # use the editor's Copilot session, so LLM access goes through a standard
+    # OpenAI-compatible endpoint. Options:
+    #   "openai" — any OpenAI-compatible API (OpenAI, Azure AI Foundry models
+    #              endpoint, or a local server like Ollama/vLLM). The default.
+    #   "azure"  — a classic Azure OpenAI deployment.
+    #   "groq"   — legacy fallback (kept working, just not the default).
+    llm_provider: str = "openai"
+
+    # OpenAI-compatible endpoint (llm_provider == "openai"). Point base_url at
+    # Azure AI Foundry or a local server for a non-OpenAI backend.
+    openai_api_key: str = ""
+    openai_base_url: str = "https://api.openai.com/v1"
+    openai_model: str = "gpt-4o-mini"
+
+    # Classic Azure OpenAI (llm_provider == "azure").
+    azure_openai_api_key: str = ""
+    azure_openai_endpoint: str = ""
+    azure_openai_api_version: str = "2024-10-21"
+    azure_openai_deployment: str = ""
+
+    # --- LLM (Groq, legacy fallback) ---------------------------------------
     groq_api_key: str = ""
     groq_model: str = "llama-3.3-70b-versatile"
 

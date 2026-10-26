@@ -29,6 +29,13 @@ _SONAR_SEVERITY_MAP: dict[str, Severity] = {
     "MINOR": Severity.LOW,
     "INFO": Severity.LOW,
 }
+# Security Hotspots use a review-probability scale, not the issue severity scale.
+# We map probability straight across; reachability + RAG triage re-rank later.
+_HOTSPOT_SEVERITY_MAP: dict[str, Severity] = {
+    "HIGH": Severity.HIGH,
+    "MEDIUM": Severity.MEDIUM,
+    "LOW": Severity.LOW,
+}
 _GITLEAKS_SEVERITY = Severity.HIGH
 
 
@@ -80,13 +87,39 @@ def _normalize_gitleaks(finding: dict, repo_root: str = "") -> FindingCreate:
     )
 
 
+def _normalize_hotspot(hotspot: dict, repo_root: str = "") -> FindingCreate:
+    """Map a SonarQube Security Hotspot into the unified Finding shape.
+
+    Hotspots come from /api/hotspots/search (a different endpoint than issues)
+    and carry a review probability instead of a severity; many high-value Python
+    SAST findings (os.system, hardcoded secrets, weak crypto) land here.
+    """
+    prob = hotspot.get("vulnerabilityProbability", "MEDIUM")
+    component = hotspot.get("component", "")
+    file_path = component.split(":", 1)[1] if ":" in component else component
+    return FindingCreate(
+        source_tool=SourceTool.SONARQUBE,
+        severity=f"hotspot:{prob}",
+        normalized_severity=_HOTSPOT_SEVERITY_MAP.get(prob, Severity.MEDIUM),
+        rule_id=hotspot.get("ruleKey") or hotspot.get("rule", "unknown"),
+        file_path=normalize_path(file_path, repo_root),
+        line_number=hotspot.get("line"),
+        message=hotspot.get("message", "Security hotspot"),
+    )
+
+
 def normalize(sonar_issues: list[dict], gitleaks_findings: list[dict],
-              repo_root: str = "") -> list[FindingCreate]:
+              repo_root: str = "",
+              sonar_hotspots: list[dict] | None = None) -> list[FindingCreate]:
     """Map raw tool output into a single list of unified findings.
 
     `repo_root` is the scanned path; file paths are normalized relative to it so
-    both tools report consistent, repo-relative locations.
+    all tools report consistent, repo-relative locations. `sonar_hotspots` are
+    SonarQube Security Hotspots, folded in alongside issues.
     """
-    return [_normalize_sonar(i, repo_root) for i in sonar_issues] + [
-        _normalize_gitleaks(f, repo_root) for f in gitleaks_findings
-    ]
+    sonar_hotspots = sonar_hotspots or []
+    return (
+        [_normalize_sonar(i, repo_root) for i in sonar_issues]
+        + [_normalize_hotspot(h, repo_root) for h in sonar_hotspots]
+        + [_normalize_gitleaks(f, repo_root) for f in gitleaks_findings]
+    )

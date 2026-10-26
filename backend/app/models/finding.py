@@ -57,5 +57,13 @@ class Finding(Base):
     )
     # Filled by the RAG triage agent in Phase 2; nullable until then.
     triage_result: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # Codebase-aware reachability verdict (ReachabilityResult), computed at scan
+    # time by static analysis. Nullable until the analysis runs.
+    reachability: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # Fused severity + reachability score (PriorityResult); what the UI sorts by.
+    priority: Mapped[dict | None] = mapped_column(JSON, nullable=True)
+    # Self-verifying fix (VerifiedFixResult): proposed patch + verification
+    # outcome. Filled on demand by the fix endpoint; nullable until requested.
+    verified_fix: Mapped[dict | None] = mapped_column(JSON, nullable=True)
 
     scan: Mapped["Scan"] = relationship("Scan", back_populates="findings")  # noqa: F821

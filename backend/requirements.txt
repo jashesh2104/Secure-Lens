@@ -13,6 +13,10 @@ python-dotenv==1.0.1
 alembic==1.14.0
 requests==2.32.3
 PyJWT==2.10.1
+# Make Python trust the OS certificate store (Windows/macOS/Linux), so outbound
+# HTTPS to LLM providers works behind corporate TLS-inspecting proxies whose
+# root CA isn't in certifi's bundle.
+truststore==0.10.1
 
 # --- Auth (password hashing) ---
 # passlib 1.7.4 + bcrypt 4.0.1 is a known-good pairing; bcrypt 4.1+ removed the
@@ -34,4 +38,7 @@ httpx==0.28.1
 # installs on Windows/py3.12 without MSVC build tools.
 langchain==0.3.13
 langchain-groq==0.2.2
+# OpenAI-compatible provider (OpenAI, Azure OpenAI / Azure AI Foundry, local
+# servers). This is the default LLM backend after GitHub Models was retired.
+langchain-openai==0.2.14
 chromadb==1.5.9

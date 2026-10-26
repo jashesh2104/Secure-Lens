@@ -24,3 +24,17 @@ def test_gitleaks_maps_high():
                                      "StartLine": 1, "Description": "key"}])
     assert out[0].source_tool == SourceTool.GITLEAKS
     assert out[0].normalized_severity == Severity.HIGH
+
+
+def test_hotspot_maps_to_sonar_finding():
+    out = normalizer.normalize(
+        [], [], "",
+        [{"component": "k:app.py", "line": 6, "vulnerabilityProbability": "HIGH",
+          "ruleKey": "python:S4721", "message": "OS command"}],
+    )
+    assert len(out) == 1
+    assert out[0].source_tool == SourceTool.SONARQUBE
+    assert out[0].normalized_severity == Severity.HIGH
+    assert out[0].rule_id == "python:S4721"
+    assert out[0].file_path == "app.py"
+    assert out[0].severity == "hotspot:HIGH"
